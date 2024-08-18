@@ -9,6 +9,8 @@ docker build -t rocket_tutorial:dev .
 docker run -p 8000:8000 rocket_tutorial:dev
 ```
 
+Syntax: `curl localhost:8000/pwd/14`
+
 Calling `/pwd` will return five passwords. Calling `/pwd/x` will return up to 31 passwords.
 
 Rocket framework: https://rocket.rs/
