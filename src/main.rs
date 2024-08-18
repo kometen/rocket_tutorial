@@ -1,8 +1,9 @@
 #[macro_use] extern crate rocket;
 
 use rocket::serde::json::Json;
-use passwords::PasswordGenerator;
+use passwords::{PasswordGenerator, analyzer, scorer};
 
+#[derive(serde::Serialize)]
 struct Pwd {
     password: String,
     score: f64,
@@ -36,8 +37,14 @@ fn pwd_count(count: usize) -> Json<Vec<Pwd>> {
         strict: true,
     };
 
-    let mut pwd = Vec<Pwd>::new();
-    Json(pg.generate(c).unwrap())
+    let mut pwd: Vec<Pwd> = Vec::with_capacity(c);
+    pg.generate(c).unwrap().into_iter()
+        .map(|x| {
+            pwd.push(Pwd {
+                password: x.clone(),
+                score: scorer::score(&analyzer::analyze(&x))});
+        }).count();
+    Json(pwd)
 }
 
 #[launch]

@@ -995,6 +995,7 @@ version = "0.1.0"
 dependencies = [
  "passwords",
  "rocket",
+ "serde",
 ]
 
 [[package]]
