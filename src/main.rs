@@ -13,6 +13,7 @@ struct Pwd {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct PasswordOptions {
+    count: Option<usize>,
     length: Option<usize>,
     numbers: Option<bool>,
     lowercase_letters: Option<bool>,
@@ -26,6 +27,8 @@ struct PasswordOptions {
 impl PasswordOptions {
     fn new() -> PasswordOptions {
         PasswordOptions {
+            count: Some(5),
+            // Default password length
             length: Some(20),
             numbers: Some(true),
             lowercase_letters: Some(true),
@@ -44,9 +47,10 @@ fn index() -> &'static str {
 }
 
 #[post("/", data = "<password_options>")]
-fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Pwd> {
+fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Vec<Pwd>> {
     let password_options = password_options.into_inner();
 
+    let c = password_options.count.unwrap_or_else(|| 5);
     let pwd_length = password_options.length.unwrap_or_else(|| 20);
     let option_numbers = password_options.numbers.unwrap_or_else(|| true);
     let option_lowercase_letters = password_options.lowercase_letters.unwrap_or_else(|| true);
@@ -67,11 +71,15 @@ fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Pwd> {
         strict: option_strict,
     };
 
-    let pwd = pg.generate_one().unwrap();
-    Json(Pwd {
-        password: pwd.clone(),
-        score: scorer::score(&analyzer::analyze(&pwd)).ceil() as u8
-    })
+    let mut pwd: Vec<Pwd> = Vec::with_capacity(c);
+    pg.generate(c).unwrap().into_iter()
+        .map(|x| {
+            pwd.push(Pwd {
+                password: x.clone(),
+                score: scorer::score(&analyzer::analyze(&x)).ceil() as u8
+            });
+        }).count();
+    Json(pwd)
 }
 
 
