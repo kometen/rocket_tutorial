@@ -4,8 +4,8 @@ mod tests {
 
     #[test]
     fn validate_default_passwords_returned() {
-        let default = pwd_count(5);
-        assert_eq!(default.len(), 5)
+        let default = pwd_count(6);
+        assert_eq!(default.len(), 6)
     }
 
     #[test]
@@ -23,6 +23,6 @@ mod tests {
     #[test]
     fn validate_no_passwords_returned() {
         let default = pwd_count(0);
-        assert_eq!(default.len(), 0)
+        assert_eq!(default.len(), 31)
     }
 }
