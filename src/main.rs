@@ -5,7 +5,7 @@ mod tests;
 use rocket::serde::json::Json;
 use passwords::{PasswordGenerator, analyzer, scorer};
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 struct Pwd {
     password: String,
     score: u8,
