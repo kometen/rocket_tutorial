@@ -5,14 +5,16 @@ extern crate rocket;
 
 use passwords::{analyzer, scorer, PasswordGenerator};
 use rocket::serde::json::Json;
+use utoipa::{OpenApi, ToSchema};
+use utoipa_swagger_ui::SwaggerUi;
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, ToSchema)]
 struct Pwd {
     password: String,
     score: u8,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, ToSchema)]
 struct PasswordOptions {
     count: Option<usize>,
     length: Option<usize>,
@@ -42,21 +44,41 @@ impl PasswordOptions {
     }
 }
 
-#[get("/")]
-fn index() -> &'static str {
-    "Eg eter blåbærsyltetøy!"
-}
-
+#[utoipa::path(
+    post,
+    path = "/",
+    request_body = PasswordOptions,
+    responses(
+        (status = 200, description = "Generate Passwords With Options", body = [Pwd])
+    ),
+)]
 #[post("/", data = "<password_options>")]
 fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Vec<Pwd>> {
     generate_passwords(&password_options)
 }
 
+#[utoipa::path(
+    get,
+    path = "/pwd",
+    responses(
+        (status = 200, description = "Generate (default 5) Passwords", body = [Pwd])
+    ),
+)]
 #[get("/pwd")]
 fn pwd() -> Json<Vec<Pwd>> {
     pwd_count(5)
 }
 
+#[utoipa::path(
+    get,
+    path = "/pwd/{count}",
+    responses(
+        (status = 200, description = "Generate Passwords", body = [Pwd])
+    ),
+    params(
+        ("count" = usize, Path, description = "Number of passwords to generate")
+    )
+)]
 #[get("/pwd/<count>")]
 fn pwd_count(count: usize) -> Json<Vec<Pwd>> {
     let c = match count {
@@ -117,9 +139,19 @@ fn generate_passwords(password_options: &PasswordOptions) -> Json<Vec<Pwd>> {
 
 #[launch]
 fn rocket() -> _ {
+    #[derive(OpenApi)]
+    #[openapi(
+        paths(pwd, pwd_count, post_pwd),
+        components(schemas(Pwd, PasswordOptions))
+    )]
+    struct ApiDoc;
+
     rocket::build()
-        .mount("/", routes![index])
         .mount("/", routes![post_pwd])
         .mount("/", routes![pwd])
         .mount("/", routes![pwd_count])
+        .mount(
+            "/",
+            SwaggerUi::new("/swagger-ui/<_..>").url("/api-docs/openapi.json", ApiDoc::openapi()),
+        )
 }
