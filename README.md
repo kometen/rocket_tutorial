@@ -13,6 +13,8 @@ Syntax: `curl localhost:8000/pwd/14`
 
 Calling `/pwd` will return five passwords. Calling `/pwd/x` will return up to 31 passwords.
 
+Swagger UI at `/swagger-ui`.
+
 Rocket framework: https://rocket.rs/
 
 Password-crate: https://docs.rs/passwords/latest/passwords/index.html
