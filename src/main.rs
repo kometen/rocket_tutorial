@@ -1,9 +1,10 @@
 mod tests;
 
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
+use passwords::{analyzer, scorer, PasswordGenerator};
 use rocket::serde::json::Json;
-use passwords::{PasswordGenerator, analyzer, scorer};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Pwd {
@@ -51,7 +52,6 @@ fn post_pwd(password_options: Json<PasswordOptions>) -> Json<Vec<Pwd>> {
     generate_passwords(&password_options)
 }
 
-
 #[get("/pwd")]
 fn pwd() -> Json<Vec<Pwd>> {
     pwd_count(5)
@@ -61,7 +61,7 @@ fn pwd() -> Json<Vec<Pwd>> {
 fn pwd_count(count: usize) -> Json<Vec<Pwd>> {
     let c = match count {
         1..=31 => count,
-        _ => 31
+        _ => 31,
     };
 
     let password_options = PasswordOptions::new(c, 20);
@@ -77,7 +77,9 @@ fn generate_passwords(password_options: &PasswordOptions) -> Json<Vec<Pwd>> {
     let mut option_uppercase_letters = password_options.uppercase_letters.unwrap_or_else(|| true);
     let mut option_symbols = password_options.symbols.unwrap_or_else(|| false);
     let mut option_spaces = password_options.spaces.unwrap_or_else(|| true);
-    let option_exclude_similar_characters = password_options.exclude_similar_characters.unwrap_or_else(|| false);
+    let option_exclude_similar_characters = password_options
+        .exclude_similar_characters
+        .unwrap_or_else(|| false);
     let option_strict = password_options.strict.unwrap_or_else(|| false);
 
     if option_strict {
@@ -100,13 +102,16 @@ fn generate_passwords(password_options: &PasswordOptions) -> Json<Vec<Pwd>> {
     };
 
     let mut pwd: Vec<Pwd> = Vec::with_capacity(c);
-    pg.generate(c).unwrap().into_iter()
+    pg.generate(c)
+        .unwrap()
+        .into_iter()
         .map(|x| {
             pwd.push(Pwd {
                 password: x.clone(),
-                score: scorer::score(&analyzer::analyze(&x)).ceil() as u8
+                score: scorer::score(&analyzer::analyze(&x)).ceil() as u8,
             });
-        }).count();
+        })
+        .count();
     Json(pwd)
 }
 
