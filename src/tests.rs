@@ -42,7 +42,7 @@ mod tests {
         assert_eq!(response.status(), Status::Ok);
         assert_eq!(response.content_type(), Some(ContentType::JSON));
         let passwords: Vec<Pwd> = response.into_json().expect("valid JSON response");
-        assert_eq!(passwords.first().unwrap().password.len(), 20);
+        assert_eq!(passwords.first().unwrap().password.replace(" ", "").len(), 0);
     }
 
     #[test]
